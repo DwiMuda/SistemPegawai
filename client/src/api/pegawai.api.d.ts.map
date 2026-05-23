@@ -1,0 +1,1 @@
+{"version":3,"file":"pegawai.api.d.ts","sourceRoot":"","sources":["pegawai.api.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,WAAW,EAAE,MAAM,aAAa,CAAC;AAC/C,OAAO,KAAK,EAAE,OAAO,EAAE,WAAW,EAAE,iBAAiB,EAAE,MAAM,iBAAiB,CAAC;AAE/E,eAAO,MAAM,UAAU;oBACL,iBAAiB;;gBAQrB,MAAM;iBAIL,WAAW;eAIb,MAAM,QAAQ,OAAO,CAAC,WAAW,CAAC;eAIlC,MAAM;CAGlB,CAAC"}

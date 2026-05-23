@@ -1,0 +1,322 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// Jabatan (Positions)
+// ==========================================
+model Jabatan {
+  idJabatan        Int         @id @default(autoincrement())
+  namaJabatan      String      @unique
+  deskripsi        String?
+  gajiPokokDefault Float
+  tunjanganDefault Float       @default(0)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  deletedAt        DateTime?
+
+  pegawai          Pegawai[]
+
+  @@map("jabatan")
+}
+
+// ==========================================
+// Departemen (Departments)
+// ==========================================
+model Departemen {
+  idDepartemen   Int         @id @default(autoincrement())
+  namaDepartemen String      @unique
+  kodeDepartemen String      @unique
+  idKepala       Int?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  deletedAt      DateTime?
+
+  kepala         Pegawai?    @relation("KepalaDepartemen", fields: [idKepala], references: [idPegawai])
+  pegawai        Pegawai[]   @relation("AnggotaDepartemen")
+
+  @@map("departemen")
+}
+
+// ==========================================
+// Pegawai (Employees)
+// ==========================================
+model Pegawai {
+  idPegawai        Int         @id @default(autoincrement())
+  nip              String      @unique
+  namaLengkap      String
+  jenisKelamin     String      // L / P
+  tanggalLahir     DateTime
+  tempatLahir      String
+  alamat           String
+  noTelpon         String?
+  email            String?     @unique
+  idJabatan        Int
+  idDepartemen     Int
+  tanggalMasuk     DateTime
+  statusPegawai    String      @default("aktif") // aktif, cuti, nonaktif
+  foto             String?     // file path
+  sisaCuti         Int         @default(12)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  deletedAt        DateTime?
+
+  jabatan          Jabatan     @relation(fields: [idJabatan], references: [idJabatan])
+  departemen       Departemen  @relation("AnggotaDepartemen", fields: [idDepartemen], references: [idDepartemen])
+  kepalaDepartemen Departemen[] @relation("KepalaDepartemen")
+  user             Users?
+  absensi          Absensi[]
+  penggajian       Penggajian[]
+  pengajuanCuti    PengajuanCuti[]
+  lembur           Lembur[]
+  mutasi           Mutasi[]
+  notifikasi       Notifikasi[]
+
+  @@index([nip])
+  @@index([statusPegawai])
+  @@map("pegawai")
+}
+
+// ==========================================
+// Users (Authentication)
+// ==========================================
+model Users {
+  idUser        Int         @id @default(autoincrement())
+  username      String      @unique
+  passwordHash  String
+  role          String      // admin, pegawai
+  idPegawai     Int?        @unique
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  lastLogin     DateTime?
+  loginAttempts Int         @default(0)
+  lockedUntil   DateTime?
+
+  pegawai       Pegawai?    @relation(fields: [idPegawai], references: [idPegawai])
+  refreshToken  RefreshToken[]
+  auditLog      AuditLog[]
+  notifikasi    Notifikasi[]
+
+  // Relations as admin for various approvals
+  penggajianAdmin   Penggajian[]    @relation("PenggajianAdmin")
+  absensiAdmin      Absensi[]       @relation("AbsensiAdmin")
+  cutiAdmin         PengajuanCuti[] @relation("CutiAdmin")
+  lemburAdmin       Lembur[]        @relation("LemburAdmin")
+  mutasiAdmin       Mutasi[]        @relation("MutasiAdmin")
+
+  @@map("users")
+}
+
+// ==========================================
+// Refresh Tokens
+// ==========================================
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  idUser     Int
+  token      String   @unique
+  expiresAt  DateTime
+  isRevoked  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user       Users    @relation(fields: [idUser], references: [idUser])
+
+  @@index([idUser])
+  @@index([token])
+  @@map("refresh_token")
+}
+
+// ==========================================
+// Penggajian (Payroll)
+// ==========================================
+model Penggajian {
+  idGaji             Int       @id @default(autoincrement())
+  idPegawai          Int
+  periodeBulan       Int       // 1-12
+  periodeTahun       Int
+  gajiPokok          Float
+  tunjanganJabatan   Float     @default(0)
+  tunjanganTransport Float     @default(0)
+  tunjanganMakan     Float     @default(0)
+  bonus              Float     @default(0)
+  upahLembur         Float     @default(0)
+  potonganAbsensi    Float     @default(0)
+  potonganBpjs       Float     @default(0)
+  potonganPajak      Float     @default(0)
+  potonganLain       Float     @default(0)
+  totalGaji          Float
+  statusBayar        String    @default("pending") // pending, dibayar, batal
+  tanggalBayar       DateTime?
+  idAdmin            Int?
+  keterangan         String?
+  createdAt          DateTime  @default(now())
+
+  pegawai            Pegawai   @relation(fields: [idPegawai], references: [idPegawai])
+  admin              Users?    @relation("PenggajianAdmin", fields: [idAdmin], references: [idUser])
+
+  @@unique([idPegawai, periodeBulan, periodeTahun])
+  @@index([periodeTahun, periodeBulan])
+  @@index([statusBayar])
+  @@map("penggajian")
+}
+
+// ==========================================
+// Absensi (Attendance)
+// ==========================================
+model Absensi {
+  idAbsensi    Int       @id @default(autoincrement())
+  idPegawai    Int
+  tanggal      DateTime
+  jamMasuk     String?   // HH:mm
+  jamKeluar    String?   // HH:mm
+  status       String    // hadir, izin, sakit, cuti, alpha, libur
+  keterangan   String?
+  isLate       Boolean   @default(false)
+  idAdmin      Int?
+  isValidated  Boolean   @default(false)
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  pegawai      Pegawai   @relation(fields: [idPegawai], references: [idPegawai])
+  admin        Users?    @relation("AbsensiAdmin", fields: [idAdmin], references: [idUser])
+
+  @@unique([idPegawai, tanggal])
+  @@index([tanggal])
+  @@index([idPegawai, tanggal])
+  @@map("absensi")
+}
+
+// ==========================================
+// Pengajuan Cuti (Leave Requests)
+// ==========================================
+model PengajuanCuti {
+  idCuti         Int       @id @default(autoincrement())
+  idPegawai      Int
+  jenisCuti      String    // tahunan, sakit, melahirkan, lainnya
+  tanggalMulai   DateTime
+  tanggalSelesai DateTime
+  jumlahHari     Int
+  alasan         String
+  status         String    @default("pending") // pending, disetujui, ditolak
+  idAdmin        Int?
+  catatanAdmin   String?
+  createdAt      DateTime  @default(now())
+
+  pegawai        Pegawai   @relation(fields: [idPegawai], references: [idPegawai])
+  admin          Users?    @relation("CutiAdmin", fields: [idAdmin], references: [idUser])
+
+  @@index([idPegawai])
+  @@index([status])
+  @@map("pengajuan_cuti")
+}
+
+// ==========================================
+// Lembur (Overtime)
+// ==========================================
+model Lembur {
+  idLembur     Int       @id @default(autoincrement())
+  idPegawai    Int
+  tanggal      DateTime
+  jamMulai     String    // HH:mm
+  jamSelesai   String    // HH:mm
+  totalJam     Float
+  tarifPerJam  Float
+  totalUpah    Float
+  status       String    @default("pending") // pending, disetujui, ditolak
+  idAdmin      Int?
+  keterangan   String?
+  createdAt    DateTime  @default(now())
+
+  pegawai      Pegawai   @relation(fields: [idPegawai], references: [idPegawai])
+  admin        Users?    @relation("LemburAdmin", fields: [idAdmin], references: [idUser])
+
+  @@unique([idPegawai, tanggal])
+  @@index([idPegawai])
+  @@index([status])
+  @@map("lembur")
+}
+
+// ==========================================
+// Mutasi (Position Transfers)
+// ==========================================
+model Mutasi {
+  idMutasi         Int       @id @default(autoincrement())
+  idPegawai        Int
+  idJabatanLama    Int
+  idJabatanBaru    Int
+  idDepartemenLama Int?
+  idDepartemenBaru Int?
+  tanggal          DateTime
+  alasan           String
+  jenisMutasi      String    // promosi, demosi, rotasi, transfer
+  idAdmin          Int
+  createdAt        DateTime  @default(now())
+
+  pegawai          Pegawai   @relation(fields: [idPegawai], references: [idPegawai])
+  admin            Users     @relation("MutasiAdmin", fields: [idAdmin], references: [idUser])
+
+  @@index([idPegawai])
+  @@map("mutasi")
+}
+
+// ==========================================
+// Notifikasi (Notifications)
+// ==========================================
+model Notifikasi {
+  idNotifikasi Int       @id @default(autoincrement())
+  idUser       Int
+  idPegawai    Int?
+  judul        String
+  pesan        String
+  tipe         String    // info, success, warning, danger
+  terkaitTabel String?   // nama tabel
+  terkaitId    Int?
+  isRead       Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+
+  user         Users     @relation(fields: [idUser], references: [idUser])
+  pegawai      Pegawai?  @relation(fields: [idPegawai], references: [idPegawai])
+
+  @@index([idUser, isRead])
+  @@map("notifikasi")
+}
+
+// ==========================================
+// Audit Log
+// ==========================================
+model AuditLog {
+  idAuditLog Int       @id @default(autoincrement())
+  idUser     Int?
+  action     String    // CREATE, UPDATE, DELETE, LOGIN, LOGOUT
+  entity     String    // table name
+  entityId   Int?
+  oldData    String?   // JSON string
+  newData    String?   // JSON string
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  user       Users?    @relation(fields: [idUser], references: [idUser])
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_log")
+}
+
+// ==========================================
+// Setting (System Configuration)
+// ==========================================
+model Setting {
+  idSetting Int     @id @default(autoincrement())
+  key       String  @unique
+  value     String
+  deskripsi String?
+
+  @@map("setting")
+}
