@@ -21,6 +21,7 @@ build/
 logs/
 *.log
 npm-debug.log*
+server_logs.txt
 
 # IDE
 .idea/

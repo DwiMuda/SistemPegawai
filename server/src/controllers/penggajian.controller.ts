@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import '../types/express';
 import { PenggajianService } from '../services/penggajian.service';
 import { successResponse } from '../utils/response';
 import { generatePenggajianSchema, updateKomponenSchema, getPenggajianQuerySchema, bayarGajiSchema, bayarMassalSchema } from '../validators/penggajian.validator';

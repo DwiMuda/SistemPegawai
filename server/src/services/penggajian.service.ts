@@ -81,6 +81,24 @@ export class PenggajianService {
       });
       const upahLembur = lemburBulanIni.reduce((sum, item) => sum + item.totalUpah, 0);
 
+      // Hitung Kasbon (yang disetujui, siap dipotong)
+      const kasbonList = await prisma.kasbon.findMany({
+        where: {
+          idPegawai: p.idPegawai,
+          status: 'disetujui'
+        }
+      });
+      const potonganKasbon = kasbonList.reduce((sum, item) => sum + item.jumlah, 0);
+
+      // Hitung Reimbursement (yang disetujui, siap ditambahkan)
+      const reimburseList = await prisma.reimbursement.findMany({
+        where: {
+          idPegawai: p.idPegawai,
+          status: 'disetujui'
+        }
+      });
+      const tambahanReimburse = reimburseList.reduce((sum, item) => sum + item.jumlah, 0);
+
       // Komponen Dasar
       const gajiPokok = p.jabatan.gajiPokokDefault;
       const tunjanganJabatan = p.jabatan.tunjanganDefault;
@@ -89,7 +107,7 @@ export class PenggajianService {
       const tunjanganTransport = settingTunjanganTransport;
       const tunjanganMakanPerHari = settingTunjanganMakan;
       const tunjanganMakan = hariHadir * tunjanganMakanPerHari;
-      const bonus = 0; // Default awal 0, bisa diedit nanti
+      const bonus = tambahanReimburse; // Masukkan reimburse ke bonus default
 
       // Potongan
       // Asumsi 1 hari alpha memotong = (gajiPokok / 25)
@@ -102,7 +120,7 @@ export class PenggajianService {
       const totalBruto = gajiPokok + tunjanganJabatan + tunjanganTransport + tunjanganMakan + bonus + upahLembur;
       const potonganPajak = PajakService.hitungPPh21Bulanan(totalBruto, ptkpDefault);
 
-      const potonganLain = 0; // Default awal 0
+      const potonganLain = potonganKasbon; // Masukkan kasbon ke potongan lain
 
       // Total Gaji
       const totalGaji = Math.round(totalBruto - (potonganAbsensi + potonganBpjs + potonganPajak + potonganLain));
@@ -197,6 +215,18 @@ export class PenggajianService {
       idAdmin
     });
 
+    // Update status Kasbon jadi lunas
+    await prisma.kasbon.updateMany({
+      where: { idPegawai: result.idPegawai, status: 'disetujui' },
+      data: { status: 'lunas', bulanPotong: result.periodeBulan, tahunPotong: result.periodeTahun, idAdmin }
+    });
+
+    // Update status Reimbursement jadi dibayar
+    await prisma.reimbursement.updateMany({
+      where: { idPegawai: result.idPegawai, status: 'disetujui' },
+      data: { status: 'dibayar', bulanBayar: result.periodeBulan, tahunBayar: result.periodeTahun, idAdmin }
+    });
+
     // Kirim notifikasi ke pegawai
     const formatRp = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(result.totalGaji);
     const user = await prisma.users.findFirst({ where: { idPegawai: result.idPegawai } });
@@ -228,6 +258,16 @@ export class PenggajianService {
               tanggalBayar: date,
               idAdmin
             }
+          });
+
+          // Update status Kasbon & Reimbursement
+          await tx.kasbon.updateMany({
+            where: { idPegawai: result.idPegawai, status: 'disetujui' },
+            data: { status: 'lunas', bulanPotong: result.periodeBulan, tahunPotong: result.periodeTahun, idAdmin }
+          });
+          await tx.reimbursement.updateMany({
+            where: { idPegawai: result.idPegawai, status: 'disetujui' },
+            data: { status: 'dibayar', bulanBayar: result.periodeBulan, tahunBayar: result.periodeTahun, idAdmin }
           });
 
           // Kirim notifikasi

@@ -111,11 +111,11 @@
             class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
           >
             <div class="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span class="text-white text-xs font-bold">AD</span>
+              <span class="text-white text-xs font-bold">{{ userInitials }}</span>
             </div>
             <div class="hidden md:block text-left">
-              <p class="text-sm font-medium text-surface-900 dark:text-white">Admin</p>
-              <p class="text-xs text-surface-500">Administrator</p>
+              <p class="text-sm font-medium text-surface-900 dark:text-white">{{ authStore.user?.nama || authStore.user?.username }}</p>
+              <p class="text-xs text-surface-500 capitalize">{{ authStore.user?.role === 'admin' ? 'Administrator' : 'Pegawai' }}</p>
             </div>
             <svg class="w-4 h-4 text-surface-400 hidden md:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
@@ -171,6 +171,11 @@ const authStore = useAuthStore();
 const { isDark, toggleDarkMode } = useDarkMode();
 const showUserMenu = ref(false);
 const showNotifMenu = ref(false);
+
+const userInitials = computed(() => {
+  const name = authStore.user?.nama || authStore.user?.username || 'U';
+  return name.substring(0, 2).toUpperCase();
+});
 
 const notifications = ref<any[]>([]);
 const unreadCount = ref(0);
@@ -257,6 +262,12 @@ const pageTitle = computed(() => {
     PegawaiCuti: 'Cuti',
     PegawaiSlipGaji: 'Slip Gaji',
     PegawaiProfile: 'Profil',
+    AdminPengumuman: 'Pengumuman',
+    AdminKasbon: 'Kasbon',
+    AdminReimbursement: 'Reimbursement',
+    PegawaiLembur: 'Lembur',
+    PegawaiKasbon: 'Kasbon',
+    PegawaiReimbursement: 'Reimbursement',
   };
   return titles[name] || 'Sistem Kepegawaian';
 });

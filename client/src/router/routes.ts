@@ -106,6 +106,24 @@ export const routes: RouteRecordRaw[] = [
         name: 'Setting',
         component: () => import('@/pages/admin/setting/SettingPage.vue'),
       },
+      // Pengumuman
+      {
+        path: 'pengumuman',
+        name: 'AdminPengumuman',
+        component: () => import('@/pages/admin/pengumuman/PengumumanListPage.vue'),
+      },
+      // Kasbon
+      {
+        path: 'kasbon',
+        name: 'AdminKasbon',
+        component: () => import('@/pages/admin/kasbon/KasbonApprovalPage.vue'),
+      },
+      // Reimbursement
+      {
+        path: 'reimbursement',
+        name: 'AdminReimbursement',
+        component: () => import('@/pages/admin/reimbursement/ReimbursementApprovalPage.vue'),
+      },
     ],
   },
 
@@ -144,6 +162,16 @@ export const routes: RouteRecordRaw[] = [
         path: 'profile',
         name: 'PegawaiProfile',
         component: () => import('@/pages/pegawai/ProfilePage.vue'),
+      },
+      {
+        path: 'kasbon',
+        name: 'PegawaiKasbon',
+        component: () => import('@/pages/pegawai/KasbonPage.vue'),
+      },
+      {
+        path: 'reimbursement',
+        name: 'PegawaiReimbursement',
+        component: () => import('@/pages/pegawai/ReimbursementPage.vue'),
       },
     ],
   },

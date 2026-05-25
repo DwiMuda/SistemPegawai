@@ -76,6 +76,8 @@ model Pegawai {
   lembur           Lembur[]
   mutasi           Mutasi[]
   notifikasi       Notifikasi[]
+  kasbon           Kasbon[]
+  reimbursement    Reimbursement[]
 
   @@index([nip])
   @@index([statusPegawai])
@@ -108,6 +110,9 @@ model Users {
   cutiAdmin         PengajuanCuti[] @relation("CutiAdmin")
   lemburAdmin       Lembur[]        @relation("LemburAdmin")
   mutasiAdmin       Mutasi[]        @relation("MutasiAdmin")
+  pengumumanAdmin   Pengumuman[]    @relation("PengumumanAdmin")
+  kasbonAdmin       Kasbon[]        @relation("KasbonAdmin")
+  reimburseAdmin    Reimbursement[] @relation("ReimburseAdmin")
 
   @@map("users")
 }
@@ -319,4 +324,75 @@ model Setting {
   deskripsi String?
 
   @@map("setting")
+}
+
+// ==========================================
+// Pengumuman (Announcements)
+// ==========================================
+model Pengumuman {
+  idPengumuman   Int       @id @default(autoincrement())
+  judul          String
+  konten         String
+  tanggalMulai   DateTime  @default(now())
+  tanggalSelesai DateTime?
+  idAdmin        Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  admin          Users     @relation("PengumumanAdmin", fields: [idAdmin], references: [idUser])
+
+  @@index([tanggalMulai])
+  @@map("pengumuman")
+}
+
+// ==========================================
+// Kasbon (Employee Loans)
+// ==========================================
+model Kasbon {
+  idKasbon      Int       @id @default(autoincrement())
+  idPegawai     Int
+  tanggal       DateTime  @default(now())
+  jumlah        Float
+  alasan        String
+  status        String    @default("pending") // pending, disetujui, ditolak, lunas
+  idAdmin       Int?
+  catatanAdmin  String?
+  bulanPotong   Int?      // Bulan penggajian saat dipotong
+  tahunPotong   Int?      // Tahun penggajian saat dipotong
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  pegawai       Pegawai   @relation(fields: [idPegawai], references: [idPegawai])
+  admin         Users?    @relation("KasbonAdmin", fields: [idAdmin], references: [idUser])
+
+  @@index([idPegawai])
+  @@index([status])
+  @@map("kasbon")
+}
+
+// ==========================================
+// Reimbursement (Claims)
+// ==========================================
+model Reimbursement {
+  idReimburse   Int       @id @default(autoincrement())
+  idPegawai     Int
+  tanggal       DateTime  @default(now())
+  jenis         String    // kesehatan, transport, operasional, lainnya
+  jumlah        Float
+  deskripsi     String
+  buktiFile     String?   // path to file
+  status        String    @default("pending") // pending, disetujui, ditolak, dibayar
+  idAdmin       Int?
+  catatanAdmin  String?
+  bulanBayar    Int?      // Ditambahkan ke penggajian bulan apa
+  tahunBayar    Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  pegawai       Pegawai   @relation(fields: [idPegawai], references: [idPegawai])
+  admin         Users?    @relation("ReimburseAdmin", fields: [idAdmin], references: [idUser])
+
+  @@index([idPegawai])
+  @@index([status])
+  @@map("reimbursement")
 }

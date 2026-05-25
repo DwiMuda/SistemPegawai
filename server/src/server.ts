@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import './types/express'; // Explicitly load express augmentation
 import app from './app';
 import { config } from './config';
 

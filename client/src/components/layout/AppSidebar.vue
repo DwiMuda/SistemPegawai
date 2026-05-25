@@ -1,7 +1,10 @@
 <template>
   <aside
-    class="fixed top-0 left-0 h-full z-[300] transition-all duration-300 bg-white dark:bg-surface-900 border-r border-surface-200 dark:border-surface-700 hidden lg:block"
-    :class="collapsed ? 'w-[72px]' : 'w-[260px]'"
+    class="fixed top-0 left-0 h-full flex flex-col z-[300] transition-all duration-300 bg-white dark:bg-surface-900 border-r border-surface-200 dark:border-surface-700"
+    :class="[
+      collapsed ? 'lg:w-[72px]' : 'lg:w-[260px]',
+      mobileOpen ? 'translate-x-0 w-[260px]' : '-translate-x-full lg:translate-x-0'
+    ]"
   >
     <!-- Logo -->
     <div class="h-16 flex items-center px-4 border-b border-surface-200 dark:border-surface-700">
@@ -27,7 +30,7 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="p-3 space-y-1 overflow-y-auto h-[calc(100%-4rem)] scrollbar-hide">
+    <nav class="p-3 space-y-1 flex-1 overflow-y-auto scrollbar-hide">
       <template v-for="item in menuItems" :key="item.label">
         <!-- Single item -->
         <router-link
@@ -113,7 +116,7 @@
     <!-- Collapse button -->
     <button
       @click="$emit('toggle')"
-      class="absolute -right-3 top-20 w-6 h-6 rounded-full bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-600 shadow-sm flex items-center justify-center hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+      class="absolute -right-3 top-20 w-6 h-6 rounded-full bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-600 shadow-sm items-center justify-center hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors hidden lg:flex"
     >
       <svg
         class="w-3.5 h-3.5 text-surface-500 transition-transform duration-200"
@@ -143,13 +146,19 @@ interface MenuItem {
 
 defineProps<{
   collapsed: boolean;
+  mobileOpen?: boolean;
   menuItems: MenuItem[];
 }>();
 
-defineEmits(['toggle']);
+const emit = defineEmits(['toggle', 'close-mobile']);
 
 const route = useRoute();
 const openGroups = ref<string[]>(['Data Master', 'Absensi', 'Penggajian']);
+
+import { watch } from 'vue';
+watch(() => route.path, () => {
+  emit('close-mobile');
+});
 
 function isActive(path: string): boolean {
   return route.path === path || route.path.startsWith(path + '/');

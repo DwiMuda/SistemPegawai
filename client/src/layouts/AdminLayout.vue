@@ -3,8 +3,10 @@
     <!-- Sidebar -->
     <AppSidebar
       :collapsed="sidebarCollapsed"
+      :mobile-open="mobileSidebarOpen"
       :menu-items="adminMenuItems"
       @toggle="sidebarCollapsed = !sidebarCollapsed"
+      @close-mobile="mobileSidebarOpen = false"
     />
 
     <!-- Main content area -->
@@ -13,7 +15,7 @@
       :class="sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'"
     >
       <!-- Navbar -->
-      <AppNavbar @toggle-sidebar="sidebarCollapsed = !sidebarCollapsed" />
+      <AppNavbar @toggle-sidebar="mobileSidebarOpen = true" />
 
       <!-- Page content -->
       <main class="p-4 lg:p-6 mt-16">
@@ -104,6 +106,21 @@ const adminMenuItems = [
     label: 'Mutasi',
     icon: 'arrows-right-left',
     to: '/admin/mutasi',
+  },
+  {
+    label: 'Pengumuman',
+    icon: 'megaphone',
+    to: '/admin/pengumuman',
+  },
+  {
+    label: 'Kasbon',
+    icon: 'banknotes',
+    to: '/admin/kasbon',
+  },
+  {
+    label: 'Reimbursement',
+    icon: 'document-text',
+    to: '/admin/reimbursement',
   },
   {
     label: 'Laporan',

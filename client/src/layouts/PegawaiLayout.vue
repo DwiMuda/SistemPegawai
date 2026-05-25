@@ -3,8 +3,10 @@
     <!-- Sidebar -->
     <AppSidebar
       :collapsed="sidebarCollapsed"
+      :mobile-open="mobileSidebarOpen"
       :menu-items="pegawaiMenuItems"
       @toggle="sidebarCollapsed = !sidebarCollapsed"
+      @close-mobile="mobileSidebarOpen = false"
     />
 
     <!-- Main content -->
@@ -12,7 +14,7 @@
       class="transition-all duration-300"
       :class="sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[260px]'"
     >
-      <AppNavbar @toggle-sidebar="sidebarCollapsed = !sidebarCollapsed" />
+      <AppNavbar @toggle-sidebar="mobileSidebarOpen = true" />
 
       <main class="p-4 lg:p-6 mt-16">
         <router-view v-slot="{ Component }">
@@ -30,6 +32,22 @@
         </router-view>
       </main>
     </div>
+
+    <!-- Mobile sidebar overlay -->
+    <Transition
+      enter-active-class="transition-opacity duration-300"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-200"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="mobileSidebarOpen"
+        class="fixed inset-0 bg-black/50 z-[250] lg:hidden"
+        @click="mobileSidebarOpen = false"
+      />
+    </Transition>
   </div>
 </template>
 
@@ -39,6 +57,7 @@ import AppSidebar from '@/components/layout/AppSidebar.vue';
 import AppNavbar from '@/components/layout/AppNavbar.vue';
 
 const sidebarCollapsed = ref(false);
+const mobileSidebarOpen = ref(false);
 
 const pegawaiMenuItems = [
   {
@@ -60,6 +79,16 @@ const pegawaiMenuItems = [
     label: 'Lembur',
     icon: 'clock',
     to: '/pegawai/lembur',
+  },
+  {
+    label: 'Kasbon',
+    icon: 'banknotes',
+    to: '/pegawai/kasbon',
+  },
+  {
+    label: 'Klaim / Reimburse',
+    icon: 'document-text',
+    to: '/pegawai/reimbursement',
   },
   {
     label: 'Slip Gaji',
