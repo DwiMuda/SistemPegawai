@@ -18,7 +18,7 @@
       <AppNavbar @toggle-sidebar="mobileSidebarOpen = true" />
 
       <!-- Page content -->
-      <main class="p-4 lg:p-6 mt-16">
+      <main class="p-4 lg:p-6">
         <router-view v-slot="{ Component }">
           <transition
             enter-active-class="transition-all duration-300 ease-out"

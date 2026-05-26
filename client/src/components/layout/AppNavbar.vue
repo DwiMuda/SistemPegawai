@@ -1,5 +1,5 @@
 <template>
-  <header class="fixed top-0 right-0 left-0 lg:left-auto h-16 z-[250] bg-white/80 dark:bg-surface-900/80 backdrop-blur-xl border-b border-surface-200 dark:border-surface-700">
+  <header class="sticky top-0 w-full h-16 z-[250] bg-white/80 dark:bg-surface-900/80 backdrop-blur-xl border-b border-surface-200 dark:border-surface-700">
     <div class="h-full flex items-center justify-between px-4 lg:px-6">
       <!-- Left: mobile menu + breadcrumb -->
       <div class="flex items-center gap-3">
