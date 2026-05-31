@@ -62,6 +62,7 @@ export class AbsensiService {
     tahun?: number;
     idDepartemen?: number;
     idPegawai?: number;
+    search?: string;
   }) {
     return AbsensiRepository.getRekap(params);
   }

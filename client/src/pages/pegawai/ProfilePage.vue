@@ -21,7 +21,10 @@ const passwordData = ref({
   confirmPassword: ''
 });
 
-onMounted(() => {
+onMounted(async () => {
+  // Fetch latest profile data to ensure local state is synced
+  await authStore.fetchProfile();
+  
   const pegawai = authStore.user?.pegawai;
   if (pegawai) {
     profileData.value = {

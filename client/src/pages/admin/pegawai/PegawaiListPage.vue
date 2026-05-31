@@ -12,24 +12,40 @@
 
     <div class="card p-6">
       <!-- Filters -->
-      <div class="flex flex-wrap gap-4 mb-6">
-        <div class="w-full md:w-48">
-          <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Status</label>
-          <select v-model="filterStatus" @change="applyFilters" class="form-input text-sm">
-            <option value="">Semua Status</option>
-            <option value="aktif">Aktif</option>
-            <option value="cuti">Cuti</option>
-            <option value="nonaktif">Nonaktif</option>
-          </select>
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <div class="flex flex-wrap gap-4">
+          <div class="w-full md:w-48">
+            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Status</label>
+            <select v-model="filterStatus" @change="applyFilters" class="form-input text-sm">
+              <option value="">Semua Status</option>
+              <option value="aktif">Aktif</option>
+              <option value="cuti">Cuti</option>
+              <option value="nonaktif">Nonaktif</option>
+            </select>
+          </div>
+          <div class="w-full md:w-48">
+            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Departemen</label>
+            <select v-model="filterDepartemen" @change="applyFilters" class="form-input text-sm">
+              <option value="">Semua Departemen</option>
+              <option v-for="dept in departemenList" :key="dept.id" :value="dept.id">
+                {{ dept.namaDepartemen }}
+              </option>
+            </select>
+          </div>
         </div>
-        <div class="w-full md:w-48">
-          <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Departemen</label>
-          <select v-model="filterDepartemen" @change="applyFilters" class="form-input text-sm">
-            <option value="">Semua Departemen</option>
-            <option v-for="dept in departemenList" :key="dept.id" :value="dept.id">
-              {{ dept.namaDepartemen }}
-            </option>
-          </select>
+
+        <!-- Search -->
+        <div class="relative w-full md:w-72">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Cari nama, NIP, atau email..."
+            class="form-input pl-10"
+            @input="handleSearch"
+          />
         </div>
       </div>
 
@@ -38,10 +54,9 @@
         :data="store.list"
         :loading="store.loading"
         :pagination="store.pagination"
-        search-placeholder="Cari nama, NIP, atau email..."
+        :show-search="false"
         empty-text="Belum ada data pegawai"
         @page-change="onPageChange"
-        @search="onSearch"
       >
         <template #cell-namaLengkap="{ row }">
           <div class="flex items-center gap-3">
@@ -160,6 +175,8 @@ const deletingId = ref<number | null>(null);
 const departemenList = ref<any[]>([]);
 const filterStatus = ref('');
 const filterDepartemen = ref('');
+const searchQuery = ref('');
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
 
 const columns: Column[] = [
   { key: 'namaLengkap', label: 'Pegawai' },
@@ -193,6 +210,14 @@ function applyFilters() {
     idDepartemen: filterDepartemen.value ? Number(filterDepartemen.value) : undefined,
   });
   store.fetchAll(1);
+}
+
+function handleSearch() {
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    store.setSearch(searchQuery.value);
+    store.fetchAll(1);
+  }, 300);
 }
 
 function onPageChange(page: number) {

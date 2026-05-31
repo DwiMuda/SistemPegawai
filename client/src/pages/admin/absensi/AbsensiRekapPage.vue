@@ -42,27 +42,43 @@
 
     <div class="card p-6">
       <!-- Filters -->
-      <div class="flex flex-wrap gap-4 mb-6">
-        <div class="w-full md:w-48">
-          <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Bulan</label>
-          <select v-model="filterBulan" @change="applyFilters" class="form-input text-sm">
-            <option v-for="m in 12" :key="m" :value="m">{{ getMonthName(m) }}</option>
-          </select>
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <div class="flex flex-wrap gap-4">
+          <div class="w-full md:w-48">
+            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Bulan</label>
+            <select v-model="filterBulan" @change="applyFilters" class="form-input text-sm">
+              <option v-for="m in 12" :key="m" :value="m">{{ getMonthName(m) }}</option>
+            </select>
+          </div>
+          <div class="w-full md:w-32">
+            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Tahun</label>
+            <select v-model="filterTahun" @change="applyFilters" class="form-input text-sm">
+              <option v-for="y in [2024, 2025, 2026]" :key="y" :value="y">{{ y }}</option>
+            </select>
+          </div>
+          <div class="w-full md:w-48">
+            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Departemen</label>
+            <select v-model="filterDepartemen" @change="applyFilters" class="form-input text-sm">
+              <option value="">Semua Departemen</option>
+              <option v-for="dept in departemenList" :key="dept.id" :value="dept.id">
+                {{ dept.namaDepartemen }}
+              </option>
+            </select>
+          </div>
         </div>
-        <div class="w-full md:w-32">
-          <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Tahun</label>
-          <select v-model="filterTahun" @change="applyFilters" class="form-input text-sm">
-            <option v-for="y in [2024, 2025, 2026]" :key="y" :value="y">{{ y }}</option>
-          </select>
-        </div>
-        <div class="w-full md:w-48">
-          <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Departemen</label>
-          <select v-model="filterDepartemen" @change="applyFilters" class="form-input text-sm">
-            <option value="">Semua Departemen</option>
-            <option v-for="dept in departemenList" :key="dept.id" :value="dept.id">
-              {{ dept.namaDepartemen }}
-            </option>
-          </select>
+
+        <!-- Search -->
+        <div class="relative w-full md:w-72">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Cari..."
+            class="form-input pl-10"
+            @input="handleSearch"
+          />
         </div>
       </div>
 
@@ -70,7 +86,7 @@
         :columns="columns"
         :data="store.rekap"
         :loading="store.loading"
-        search-placeholder="Cari..."
+        :show-search="false"
         empty-text="Tidak ada data absensi"
       >
         <template #cell-tanggal="{ row }">
@@ -144,6 +160,8 @@ const filterBulan = ref(new Date().getMonth() + 1);
 const filterTahun = ref(new Date().getFullYear());
 const filterDepartemen = ref('');
 const departemenList = ref<any[]>([]);
+const searchQuery = ref('');
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
 
 const columns: Column[] = [
   { key: 'tanggal', label: 'Tanggal' },
@@ -174,6 +192,14 @@ function applyFilters() {
     idDepartemen: filterDepartemen.value ? Number(filterDepartemen.value) : undefined,
   });
   store.fetchRekap();
+}
+
+function handleSearch() {
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    store.setSearch(searchQuery.value);
+    store.fetchRekap();
+  }, 300);
 }
 
 function getMonthName(monthNumber: number) {

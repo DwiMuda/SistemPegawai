@@ -144,7 +144,7 @@ const handleBatal = async (idCuti: number) => {
 
             <div>
               <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Jumlah Hari</label>
-              <input type="number" v-model="form.jumlahHari" class="input w-full bg-surface-50 dark:bg-surface-800" readonly />
+              <input type="number" v-model="form.jumlahHari" class="input w-full" min="1" />
             </div>
 
             <div>

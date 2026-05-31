@@ -94,19 +94,19 @@ onMounted(() => {
         <p class="text-sm text-surface-500 dark:text-surface-400">Kelola pengajuan cuti dari seluruh pegawai</p>
       </div>
       
-      <div class="flex gap-2">
-        <select v-model="selectedStatus" @change="fetchData" class="input py-2">
+      <div class="flex items-center gap-3">
+        <select v-model="selectedStatus" @change="fetchData" class="form-input text-sm w-40">
           <option value="">Semua Status</option>
           <option value="pending">Menunggu</option>
           <option value="disetujui">Disetujui</option>
           <option value="ditolak">Ditolak</option>
         </select>
-        <button @click="fetchData" class="btn btn-outline" :disabled="cutiStore.isLoading">
+        <button @click="fetchData" class="btn btn-secondary btn-icon" :disabled="cutiStore.isLoading">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :class="{'animate-spin': cutiStore.isLoading}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
         </button>
-        <button @click="handleResetTahunan" class="btn btn-outline text-danger-600 border-danger-600 hover:bg-danger-50 dark:hover:bg-danger-900/20" title="Reset Sisa Cuti Tahunan Semua Pegawai ke 12">
+        <button @click="handleResetTahunan" class="btn btn-secondary text-danger-600 dark:text-danger-400 whitespace-nowrap" title="Reset Sisa Cuti Tahunan Semua Pegawai ke 12">
           Reset Cuti Tahunan
         </button>
       </div>

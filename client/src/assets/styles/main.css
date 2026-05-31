@@ -8,6 +8,14 @@
    Base Layer
    ========================================== */
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
   * {
     @apply border-surface-200 dark:border-surface-700;
   }
@@ -121,8 +129,8 @@
   }
 
   /* Input base */
-  .input {
-    @apply w-full px-4 py-2.5 rounded-xl text-sm;
+  .input, .form-input {
+    @apply w-full px-4 py-2 rounded-xl text-sm;
     @apply bg-white dark:bg-surface-800;
     @apply border border-surface-300 dark:border-surface-600;
     @apply text-surface-900 dark:text-surface-100;
@@ -132,8 +140,22 @@
     @apply disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  .input-error {
+  /* Specific style for select to be more compact */
+  select.input, select.form-input {
+    @apply py-1.5 h-9;
+  }
+
+  .input-error, .form-input-error {
     @apply border-danger-500 focus:ring-danger-500/30 focus:border-danger-500;
+  }
+
+  /* Form groups */
+  .form-group {
+    @apply flex flex-col gap-1.5;
+  }
+
+  .form-label {
+    @apply block text-sm font-semibold text-surface-700 dark:text-surface-300;
   }
 
   /* Card */

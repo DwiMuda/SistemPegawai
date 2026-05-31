@@ -180,7 +180,7 @@
         id="buatAkun"
         v-model="formData.buatAkun"
         type="checkbox"
-        class="w-5 h-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+        class="w-5 h-5 text-primary-600 rounded border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-800 focus:ring-primary-500"
         :disabled="submitting"
       />
       <label for="buatAkun" class="text-sm font-medium text-surface-900 dark:text-surface-100 cursor-pointer">

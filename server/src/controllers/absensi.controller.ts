@@ -78,6 +78,7 @@ export class AbsensiController {
         tahun: query.tahun,
         idDepartemen: query.idDepartemen,
         idPegawai: query.idPegawai,
+        search: query.search,
       });
       
       successResponse(res, 'Berhasil mengambil rekap absensi', data);

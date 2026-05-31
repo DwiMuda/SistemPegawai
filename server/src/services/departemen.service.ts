@@ -151,7 +151,7 @@ export class DepartemenService {
       namaDepartemen: item.namaDepartemen,
       kodeDepartemen: item.kodeDepartemen,
       kepala: item.kepala
-        ? { id: item.kepala.idPegawai, nama: item.kepala.namaLengkap }
+        ? { id: item.kepala.idPegawai, nama: item.kepala.namaLengkap, nip: item.kepala.nip }
         : null,
     }));
   }

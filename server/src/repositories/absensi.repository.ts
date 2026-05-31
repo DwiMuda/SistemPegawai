@@ -38,8 +38,9 @@ export class AbsensiRepository {
     tahun?: number;
     idDepartemen?: number;
     idPegawai?: number;
+    search?: string;
   }) {
-    const { bulan, tahun, idDepartemen, idPegawai } = params;
+    const { bulan, tahun, idDepartemen, idPegawai, search } = params;
     
     let dateFilter: any = {};
     if (bulan && tahun) {
@@ -62,6 +63,14 @@ export class AbsensiRepository {
       ...(Object.keys(dateFilter).length > 0 ? { tanggal: dateFilter } : {}),
       ...(idPegawai ? { idPegawai } : {}),
       ...(idDepartemen ? { pegawai: { idDepartemen } } : {}),
+      ...(search ? {
+        pegawai: {
+          OR: [
+            { namaLengkap: { contains: search } },
+            { nip: { contains: search } }
+          ]
+        }
+      } : {}),
     };
 
     return prisma.absensi.findMany({

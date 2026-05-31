@@ -1,59 +1,73 @@
 <template>
-  <form @submit.prevent="handleSubmit" class="space-y-4">
-    <div>
-      <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
-        Nama Departemen <span class="text-danger-500">*</span>
-      </label>
+  <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
+    <!-- Nama Departemen -->
+    <div class="form-group">
+      <label for="namaDepartemen" class="form-label">Nama Departemen <span class="text-danger-500">*</span></label>
       <input
+        id="namaDepartemen"
         v-model="form.namaDepartemen"
         type="text"
-        class="w-full px-4 py-2.5 rounded-xl border text-sm transition-all"
-        :class="errors.namaDepartemen ? 'border-danger-500 focus:ring-danger-500/20' : 'border-surface-200 dark:border-surface-600 focus:ring-primary-500/20 focus:border-primary-500'"
+        class="form-input"
+        :class="{ 'form-input-error': errors.namaDepartemen }"
         placeholder="Masukkan nama departemen"
+        required
+        :disabled="submitting"
       />
-      <p v-if="errors.namaDepartemen" class="mt-1 text-xs text-danger-500">{{ errors.namaDepartemen }}</p>
+      <p v-if="errors.namaDepartemen" class="text-xs text-danger-500">{{ errors.namaDepartemen }}</p>
     </div>
 
-    <div>
-      <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
-        Kode Departemen <span class="text-danger-500">*</span>
-      </label>
+    <!-- Kode Departemen -->
+    <div class="form-group">
+      <label for="kodeDepartemen" class="form-label">Kode Departemen <span class="text-danger-500">*</span></label>
       <input
+        id="kodeDepartemen"
         v-model="form.kodeDepartemen"
         type="text"
-        class="w-full px-4 py-2.5 rounded-xl border text-sm transition-all uppercase"
-        :class="errors.kodeDepartemen ? 'border-danger-500 focus:ring-danger-500/20' : 'border-surface-200 dark:border-surface-600 focus:ring-primary-500/20 focus:border-primary-500'"
+        class="form-input uppercase"
+        :class="{ 'form-input-error': errors.kodeDepartemen }"
         placeholder="Contoh: HRD-01, TI-01"
+        required
+        :disabled="submitting"
       />
-      <p v-if="errors.kodeDepartemen" class="mt-1 text-xs text-danger-500">{{ errors.kodeDepartemen }}</p>
+      <p v-if="errors.kodeDepartemen" class="text-xs text-danger-500">{{ errors.kodeDepartemen }}</p>
     </div>
 
-    <div>
-      <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Kepala Departemen</label>
-      <div class="relative">
-        <select
-          v-model="form.idKepala"
-          class="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all appearance-none"
+    <!-- Kepala Departemen -->
+    <div class="form-group">
+      <label for="idKepala" class="form-label">Kepala Departemen</label>
+      <select
+        id="idKepala"
+        v-model="form.idKepala"
+        class="form-input"
+        :disabled="submitting"
+      >
+        <option :value="null">-- Pilih Kepala Departemen --</option>
+        <option
+          v-for="pegawai in pegawaiList"
+          :key="pegawai.id"
+          :value="pegawai.id"
         >
-          <option :value="null">-- Pilih Kepala Departemen --</option>
-          <option
-            v-for="pegawai in pegawaiList"
-            :key="pegawai.id"
-            :value="pegawai.id"
-          >
-            {{ pegawai.nama }} ({{ pegawai.nip }})
-          </option>
-        </select>
-        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
-      <p v-if="errors.idKepala" class="mt-1 text-xs text-danger-500">{{ errors.idKepala }}</p>
+          {{ pegawai.nama }} ({{ pegawai.nip }})
+        </option>
+      </select>
+      <p v-if="errors.idKepala" class="text-xs text-danger-500">{{ errors.idKepala }}</p>
     </div>
 
-    <div class="flex items-center justify-end gap-3 pt-2">
-      <button type="button" @click="$emit('cancel')" class="btn btn-ghost">Batal</button>
-      <button type="submit" :disabled="submitting" class="btn btn-primary">
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-surface-200 dark:border-surface-700 mt-2">
+      <button
+        type="button"
+        class="btn btn-ghost"
+        @click="$emit('cancel')"
+        :disabled="submitting"
+      >
+        Batal
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primary min-w-[120px]"
+        :disabled="submitting"
+      >
         <svg v-if="submitting" class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -103,7 +117,7 @@ onMounted(async () => {
   try {
     const response = await api.get('/pegawai/all');
     pegawaiList.value = response.data.data.map((p: any) => ({
-      id: p.idPegawai,
+      id: p.id,
       nip: p.nip,
       nama: p.namaLengkap,
     }));

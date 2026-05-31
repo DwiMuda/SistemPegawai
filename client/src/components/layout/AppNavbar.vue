@@ -114,7 +114,7 @@
               <span class="text-white text-xs font-bold">{{ userInitials }}</span>
             </div>
             <div class="hidden md:block text-left">
-              <p class="text-sm font-medium text-surface-900 dark:text-white">{{ authStore.user?.nama || authStore.user?.username }}</p>
+              <p class="text-sm font-medium text-surface-900 dark:text-white">{{ authStore.user?.pegawai?.namaLengkap || authStore.user?.username }}</p>
               <p class="text-xs text-surface-500 capitalize">{{ authStore.user?.role === 'admin' ? 'Administrator' : 'Pegawai' }}</p>
             </div>
             <svg class="w-4 h-4 text-surface-400 hidden md:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -135,12 +135,30 @@
               v-if="showUserMenu"
               class="absolute right-0 top-full mt-2 w-56 rounded-xl bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 shadow-elevated py-2"
             >
-              <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors">
+              <!-- Role-based Profile Action -->
+              <router-link
+                v-if="authStore.isPegawai"
+                to="/pegawai/profile"
+                class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+                @click="showUserMenu = false"
+              >
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
                 Profil Saya
-              </a>
+              </router-link>
+              
+              <button
+                v-else
+                @click="openAdminProfile"
+                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+                Info Akun
+              </button>
+
               <hr class="my-1 border-surface-200 dark:border-surface-700" />
               <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-500/10 transition-colors">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -153,6 +171,64 @@
         </div>
       </div>
     </div>
+
+    <!-- Admin Profile Modal (Floating info) -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        enter-to-class="opacity-100 translate-y-0 sm:scale-100"
+        leave-active-class="transition-all duration-200 ease-in"
+        leave-from-class="opacity-100 sm:scale-100"
+        leave-to-class="opacity-0 sm:scale-95"
+      >
+        <div v-if="showAdminModal" class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-surface-900/60 backdrop-blur-md">
+          <div @click.stop class="bg-white dark:bg-surface-800 rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden border border-surface-200 dark:border-surface-700">
+            <div class="relative h-28 gradient-primary">
+              <button @click="showAdminModal = false" class="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors backdrop-blur-sm">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div class="px-8 pb-8">
+              <div class="relative -mt-14 mb-6 flex justify-center">
+                <div class="w-28 h-28 rounded-[2rem] bg-white dark:bg-surface-800 p-1.5 shadow-2xl">
+                  <div class="w-full h-full rounded-[1.5rem] gradient-primary flex items-center justify-center text-white text-4xl font-black">
+                    {{ userInitials }}
+                  </div>
+                </div>
+              </div>
+              <div class="text-center mb-8">
+                <h3 class="text-2xl font-black text-surface-900 dark:text-white tracking-tight">{{ authStore.user?.pegawai?.namaLengkap || authStore.user?.username }}</h3>
+                <p class="inline-flex items-center px-3 py-1 mt-2 rounded-full bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 font-bold text-xs uppercase tracking-widest">
+                  {{ authStore.user?.role === 'admin' ? 'System Administrator' : 'Staff Pegawai' }}
+                </p>
+              </div>
+              <div class="space-y-4">
+                <div class="flex items-center gap-4 p-4 rounded-2xl bg-surface-50 dark:bg-surface-700/30 border border-surface-100 dark:border-surface-700/50 group hover:border-primary-500/30 transition-colors">
+                  <div class="w-10 h-10 rounded-xl bg-white dark:bg-surface-800 flex items-center justify-center text-surface-400 group-hover:text-primary-500 shadow-sm transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25" /></svg>
+                  </div>
+                  <div>
+                    <p class="text-[10px] uppercase font-black text-surface-400 tracking-widest">Username</p>
+                    <p class="text-base font-bold text-surface-700 dark:text-surface-200">{{ authStore.user?.username }}</p>
+                  </div>
+                </div>
+                <div v-if="authStore.user?.pegawai?.nip" class="flex items-center gap-4 p-4 rounded-2xl bg-surface-50 dark:bg-surface-700/30 border border-surface-100 dark:border-surface-700/50 group hover:border-primary-500/30 transition-colors">
+                  <div class="w-10 h-10 rounded-xl bg-white dark:bg-surface-800 flex items-center justify-center text-surface-400 group-hover:text-primary-500 shadow-sm transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" /></svg>
+                  </div>
+                  <div>
+                    <p class="text-[10px] uppercase font-black text-surface-400 tracking-widest">Nomor Induk Pegawai</p>
+                    <p class="text-base font-bold text-surface-700 dark:text-surface-200">{{ authStore.user?.pegawai?.nip }}</p>
+                  </div>
+                </div>
+              </div>
+              <button @click="showAdminModal = false" class="w-full mt-8 btn btn-primary h-12 rounded-2xl font-bold shadow-lg shadow-primary-500/25 transition-all active:scale-[0.98]">Tutup</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </header>
 </template>
 
@@ -171,11 +247,17 @@ const authStore = useAuthStore();
 const { isDark, toggleDarkMode } = useDarkMode();
 const showUserMenu = ref(false);
 const showNotifMenu = ref(false);
+const showAdminModal = ref(false);
 
 const userInitials = computed(() => {
-  const name = authStore.user?.nama || authStore.user?.username || 'U';
+  const name = authStore.user?.pegawai?.namaLengkap || authStore.user?.username || 'U';
   return name.substring(0, 2).toUpperCase();
 });
+
+const openAdminProfile = () => {
+  showUserMenu.value = false;
+  showAdminModal.value = true;
+};
 
 const notifications = ref<any[]>([]);
 const unreadCount = ref(0);

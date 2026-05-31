@@ -1,66 +1,87 @@
 <template>
-  <form @submit.prevent="handleSubmit" class="space-y-4">
-    <div>
-      <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
-        Nama Jabatan <span class="text-danger-500">*</span>
-      </label>
+  <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
+    <!-- Nama Jabatan -->
+    <div class="form-group">
+      <label for="namaJabatan" class="form-label">Nama Jabatan <span class="text-danger-500">*</span></label>
       <input
+        id="namaJabatan"
         v-model="form.namaJabatan"
         type="text"
-        class="w-full px-4 py-2.5 rounded-xl border text-sm transition-all"
-        :class="errors.namaJabatan ? 'border-danger-500 focus:ring-danger-500/20' : 'border-surface-200 dark:border-surface-600 focus:ring-primary-500/20 focus:border-primary-500'"
+        class="form-input"
+        :class="{ 'form-input-error': errors.namaJabatan }"
         placeholder="Masukkan nama jabatan"
+        required
+        :disabled="submitting"
       />
-      <p v-if="errors.namaJabatan" class="mt-1 text-xs text-danger-500">{{ errors.namaJabatan }}</p>
+      <p v-if="errors.namaJabatan" class="text-xs text-danger-500">{{ errors.namaJabatan }}</p>
     </div>
 
-    <div>
-      <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Deskripsi</label>
+    <!-- Deskripsi -->
+    <div class="form-group">
+      <label for="deskripsi" class="form-label">Deskripsi</label>
       <textarea
+        id="deskripsi"
         v-model="form.deskripsi"
         rows="3"
-        class="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none"
+        class="form-input min-h-[100px] resize-none"
         placeholder="Deskripsi jabatan (opsional)"
-      />
+        :disabled="submitting"
+      ></textarea>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
-          Gaji Pokok <span class="text-danger-500">*</span>
-        </label>
+    <!-- Gaji & Tunjangan -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="form-group">
+        <label for="gajiPokok" class="form-label">Gaji Pokok <span class="text-danger-500">*</span></label>
         <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-surface-400">Rp</span>
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-surface-400 font-medium font-mono">Rp</span>
           <input
+            id="gajiPokok"
             v-model.number="form.gajiPokokDefault"
             type="number"
             min="0"
-            class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm transition-all"
-            :class="errors.gajiPokokDefault ? 'border-danger-500 focus:ring-danger-500/20' : 'border-surface-200 dark:border-surface-600 focus:ring-primary-500/20 focus:border-primary-500'"
+            class="form-input pl-10"
+            :class="{ 'form-input-error': errors.gajiPokokDefault }"
             placeholder="0"
+            required
+            :disabled="submitting"
           />
         </div>
-        <p v-if="errors.gajiPokokDefault" class="mt-1 text-xs text-danger-500">{{ errors.gajiPokokDefault }}</p>
+        <p v-if="errors.gajiPokokDefault" class="text-xs text-danger-500">{{ errors.gajiPokokDefault }}</p>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Tunjangan Default</label>
+      <div class="form-group">
+        <label for="tunjangan" class="form-label">Tunjangan Default</label>
         <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-surface-400">Rp</span>
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-surface-400 font-medium font-mono">Rp</span>
           <input
+            id="tunjangan"
             v-model.number="form.tunjanganDefault"
             type="number"
             min="0"
-            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+            class="form-input pl-10"
             placeholder="0"
+            :disabled="submitting"
           />
         </div>
       </div>
     </div>
 
-    <div class="flex items-center justify-end gap-3 pt-2">
-      <button type="button" @click="$emit('cancel')" class="btn btn-ghost">Batal</button>
-      <button type="submit" :disabled="submitting" class="btn btn-primary">
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-surface-200 dark:border-surface-700 mt-2">
+      <button
+        type="button"
+        class="btn btn-ghost"
+        @click="$emit('cancel')"
+        :disabled="submitting"
+      >
+        Batal
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primary min-w-[120px]"
+        :disabled="submitting"
+      >
         <svg v-if="submitting" class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />

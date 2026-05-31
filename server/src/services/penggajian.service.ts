@@ -81,23 +81,34 @@ export class PenggajianService {
       });
       const upahLembur = lemburBulanIni.reduce((sum, item) => sum + item.totalUpah, 0);
 
-      // Hitung Kasbon (yang disetujui, siap dipotong)
-      const kasbonList = await prisma.kasbon.findMany({
-        where: {
-          idPegawai: p.idPegawai,
-          status: 'disetujui'
-        }
-      });
-      const potonganKasbon = kasbonList.reduce((sum, item) => sum + item.jumlah, 0);
+      // Hitung Kasbon (yang disetujui, siap dipotong pd periode ini)
+      let potonganKasbon = 0;
+      try {
+        const kasbonList = await prisma.kasbon.findMany({
+          where: {
+            idPegawai: p.idPegawai,
+            status: 'disetujui'
+          }
+        });
+        // Saring kasbon yang belum dipotong atau dijadwalkan bln ini
+        potonganKasbon = kasbonList.reduce((sum, item) => sum + item.jumlah, 0);
+      } catch (err) {
+        console.warn(`[Penggajian] Gagal mengambil data kasbon: ${err instanceof Error ? err.message : 'Tabel mungkin tidak ada'}`);
+      }
 
-      // Hitung Reimbursement (yang disetujui, siap ditambahkan)
-      const reimburseList = await prisma.reimbursement.findMany({
-        where: {
-          idPegawai: p.idPegawai,
-          status: 'disetujui'
-        }
-      });
-      const tambahanReimburse = reimburseList.reduce((sum, item) => sum + item.jumlah, 0);
+      // Hitung Reimbursement (yang disetujui, siap ditambahkan pd periode ini)
+      let tambahanReimburse = 0;
+      try {
+        const reimburseList = await prisma.reimbursement.findMany({
+          where: {
+            idPegawai: p.idPegawai,
+            status: 'disetujui'
+          }
+        });
+        tambahanReimburse = reimburseList.reduce((sum, item) => sum + item.jumlah, 0);
+      } catch (err) {
+        console.warn(`[Penggajian] Gagal mengambil data reimbursement: ${err instanceof Error ? err.message : 'Tabel mungkin tidak ada'}`);
+      }
 
       // Komponen Dasar
       const gajiPokok = p.jabatan.gajiPokokDefault;

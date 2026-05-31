@@ -61,10 +61,10 @@
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold text-surface-900 dark:text-white">Riwayat Absensi</h2>
         <div class="flex gap-2">
-          <select v-model="filterBulan" @change="fetchRiwayat" class="form-input text-sm py-1 h-9">
+          <select v-model="filterBulan" @change="fetchRiwayat" class="form-input text-sm">
             <option v-for="m in 12" :key="m" :value="m">{{ getMonthName(m) }}</option>
           </select>
-          <select v-model="filterTahun" @change="fetchRiwayat" class="form-input text-sm py-1 h-9">
+          <select v-model="filterTahun" @change="fetchRiwayat" class="form-input text-sm">
             <option v-for="y in [2024, 2025, 2026]" :key="y" :value="y">{{ y }}</option>
           </select>
         </div>

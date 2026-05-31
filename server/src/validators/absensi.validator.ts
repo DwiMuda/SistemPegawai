@@ -5,6 +5,7 @@ export const getRekapQuerySchema = z.object({
   tahun: z.string().regex(/^\d+$/).optional().transform(Number),
   idDepartemen: z.string().regex(/^\d+$/).optional().transform(Number),
   idPegawai: z.string().regex(/^\d+$/).optional().transform(Number),
+  search: z.string().optional(),
 });
 
 export const manualInputSchema = z.object({

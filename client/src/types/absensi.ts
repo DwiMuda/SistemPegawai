@@ -32,6 +32,7 @@ export interface AbsensiRekapParams {
   tahun?: number;
   idDepartemen?: number;
   idPegawai?: number;
+  search?: string;
 }
 
 export interface AbsensiManualForm {

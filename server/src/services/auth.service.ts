@@ -8,7 +8,14 @@ export class AuthService {
   static async login(username: string, passwordPlain: string, ip: string, userAgent: string) {
     const user = await prisma.users.findUnique({
       where: { username },
-      include: { pegawai: true },
+      include: {
+        pegawai: {
+          include: {
+            jabatan: true,
+            departemen: true,
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -80,7 +87,7 @@ export class AuthService {
         id: user.idUser,
         username: user.username,
         role: user.role,
-        nama: user.pegawai?.namaLengkap || 'Admin',
+        pegawai: user.pegawai,
       },
       accessToken,
       refreshToken,
@@ -101,7 +108,14 @@ export class AuthService {
 
       const user = await prisma.users.findUnique({
         where: { idUser: payload.userId },
-        include: { pegawai: true }
+        include: {
+          pegawai: {
+            include: {
+              jabatan: true,
+              departemen: true,
+            },
+          },
+        }
       });
 
       if (!user || !user.isActive) {
@@ -132,7 +146,7 @@ export class AuthService {
           id: user.idUser,
           username: user.username,
           role: user.role,
-          nama: user.pegawai?.namaLengkap || 'Admin',
+          pegawai: user.pegawai,
         },
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,

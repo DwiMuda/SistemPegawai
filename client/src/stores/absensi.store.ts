@@ -137,6 +137,10 @@ export const useAbsensiStore = defineStore('absensi', {
       }
     },
 
+    setSearch(search: string) {
+      this.filters.search = search;
+    },
+
     setFilters(filters: Partial<AbsensiRekapParams>) {
       this.filters = { ...this.filters, ...filters };
     }

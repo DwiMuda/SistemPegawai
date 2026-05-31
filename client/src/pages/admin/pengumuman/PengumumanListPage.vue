@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { usePengumumanStore } from '@/stores/pengumuman.store';
+import { useNotification } from '@/composables/useNotification';
+import AppDataTable from '@/components/common/AppDataTable.vue';
+import AppModal from '@/components/common/AppModal.vue';
+import type { Column } from '@/components/common/AppDataTable.vue';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 const pengumumanStore = usePengumumanStore();
+const { addToast } = useNotification();
+
 const showModal = ref(false);
+const showDeleteConfirm = ref(false);
+const deletingId = ref<number | null>(null);
 const isEdit = ref(false);
 const isSubmitting = ref(false);
 
@@ -16,6 +24,12 @@ const formData = ref({
   tanggalMulai: new Date().toISOString().split('T')[0],
   tanggalSelesai: ''
 });
+
+const columns: Column[] = [
+  { key: 'judul', label: 'Pengumuman' },
+  { key: 'periode', label: 'Masa Berlaku' },
+  { key: 'admin', label: 'Dibuat Oleh' },
+];
 
 onMounted(async () => {
   await pengumumanStore.fetchAll();
@@ -55,119 +69,184 @@ const submitForm = async () => {
     tanggalSelesai: formData.value.tanggalSelesai ? formData.value.tanggalSelesai : null
   };
   
-  let success;
-  if (isEdit.value) {
-    success = await pengumumanStore.update(formData.value.idPengumuman, payload);
-  } else {
-    success = await pengumumanStore.create(payload);
+  try {
+    let success;
+    if (isEdit.value) {
+      success = await pengumumanStore.update(formData.value.idPengumuman, payload);
+    } else {
+      success = await pengumumanStore.create(payload);
+    }
+    
+    if (success) {
+      addToast({
+        type: 'success',
+        title: 'Berhasil',
+        message: `Pengumuman berhasil ${isEdit.value ? 'diperbarui' : 'ditambahkan'}`
+      });
+      closeModal();
+    } else {
+      addToast({
+        type: 'error',
+        title: 'Gagal',
+        message: pengumumanStore.error || 'Terjadi kesalahan saat menyimpan'
+      });
+    }
+  } finally {
+    isSubmitting.value = false;
   }
-  
-  if (success) {
-    closeModal();
-  } else {
-    alert('Gagal menyimpan pengumuman');
-  }
-  isSubmitting.value = false;
 };
 
-const deletePengumuman = async (idPengumuman: number) => {
-  if (confirm('Apakah Anda yakin ingin menghapus pengumuman ini?')) {
-    await pengumumanStore.delete(idPengumuman);
+const confirmDelete = (id: number) => {
+  deletingId.value = id;
+  showDeleteConfirm.value = true;
+};
+
+const handleDelete = async () => {
+  if (!deletingId.value) return;
+  
+  const success = await pengumumanStore.delete(deletingId.value);
+  if (success) {
+    addToast({ type: 'success', title: 'Berhasil', message: 'Pengumuman berhasil dihapus' });
+    showDeleteConfirm.value = false;
+    deletingId.value = null;
+  } else {
+    addToast({ type: 'error', title: 'Gagal', message: pengumumanStore.error || 'Gagal menghapus pengumuman' });
   }
 };
 </script>
 
 <template>
   <div class="space-y-6">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-surface-900 dark:text-white">Papan Pengumuman</h1>
-        <p class="text-surface-500 dark:text-surface-400">Kelola pengumuman untuk pegawai</p>
+        <p class="text-surface-500 dark:text-surface-400 text-sm mt-1">Kelola informasi dan pengumuman resmi perusahaan untuk semua pegawai.</p>
       </div>
-      <button @click="openModal()" class="btn btn-primary flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <button @click="openModal()" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
         </svg>
         Tambah Pengumuman
       </button>
     </div>
 
-    <div class="card p-0 overflow-hidden">
-      <div v-if="pengumumanStore.loading && pengumumanStore.list.length === 0" class="p-8 text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-      </div>
-      
-      <div v-else-if="pengumumanStore.list.length === 0" class="p-8 text-center text-surface-500">
-        Belum ada pengumuman.
-      </div>
+    <div class="card p-6">
+      <AppDataTable
+        :columns="columns"
+        :data="pengumumanStore.list"
+        :loading="pengumumanStore.loading"
+        empty-text="Belum ada pengumuman yang diterbitkan"
+      >
+        <template #cell-judul="{ row }">
+          <div class="max-w-md">
+            <p class="font-bold text-surface-900 dark:text-white group-hover:text-primary-600 transition-colors">{{ row.judul }}</p>
+            <p class="text-xs text-surface-500 mt-1 line-clamp-2">{{ row.konten }}</p>
+          </div>
+        </template>
 
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-left text-sm whitespace-nowrap">
-          <thead class="bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-300">
-            <tr>
-              <th class="px-4 py-3 font-medium">Judul</th>
-              <th class="px-4 py-3 font-medium">Tgl Mulai</th>
-              <th class="px-4 py-3 font-medium">Tgl Selesai</th>
-              <th class="px-4 py-3 font-medium">Admin</th>
-              <th class="px-4 py-3 font-medium text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-surface-200 dark:divide-surface-700">
-            <tr v-for="item in pengumumanStore.list" :key="item.idPengumuman" class="hover:bg-surface-50 dark:hover:bg-surface-800/50">
-              <td class="px-4 py-3 font-medium text-surface-900 dark:text-white">{{ item.judul }}</td>
-              <td class="px-4 py-3">{{ format(new Date(item.tanggalMulai), 'dd MMM yyyy', { locale: id }) }}</td>
-              <td class="px-4 py-3">{{ item.tanggalSelesai ? format(new Date(item.tanggalSelesai), 'dd MMM yyyy', { locale: id }) : '-' }}</td>
-              <td class="px-4 py-3">{{ item.admin?.pegawai?.namaLengkap || item.admin?.username }}</td>
-              <td class="px-4 py-3 text-right">
-                <button @click="openModal(item)" class="text-primary-600 hover:text-primary-900 mx-2">Edit</button>
-                <button @click="deletePengumuman(item.idPengumuman)" class="text-danger-600 hover:text-danger-900">Hapus</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <template #cell-periode="{ row }">
+          <div class="flex flex-col">
+            <span class="text-sm text-surface-700 dark:text-surface-300 font-medium">
+              {{ format(new Date(row.tanggalMulai), 'dd MMM yyyy', { locale: id }) }}
+            </span>
+            <span v-if="row.tanggalSelesai" class="text-[10px] text-surface-400">
+              s/d {{ format(new Date(row.tanggalSelesai), 'dd MMM yyyy', { locale: id }) }}
+            </span>
+            <span v-else class="text-[10px] text-success-500 font-bold uppercase tracking-wider">Seterusnya</span>
+          </div>
+        </template>
+
+        <template #cell-admin="{ row }">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-full gradient-primary flex items-center justify-center text-[10px] text-white font-bold">
+              {{ (row.admin?.pegawai?.namaLengkap || row.admin?.username || 'A').substring(0, 1) }}
+            </div>
+            <span class="text-xs text-surface-600 dark:text-surface-400">
+              {{ row.admin?.pegawai?.namaLengkap || row.admin?.username }}
+            </span>
+          </div>
+        </template>
+
+        <template #actions="{ row }">
+          <div class="flex justify-end gap-2">
+            <button @click="openModal(row)" class="btn btn-sm btn-ghost" title="Edit">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            </button>
+            <button @click="confirmDelete(row.idPengumuman)" class="btn btn-sm btn-ghost text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-900/10" title="Hapus">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
+          </div>
+        </template>
+      </AppDataTable>
     </div>
 
     <!-- Modal Form -->
-    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/50 backdrop-blur-sm">
-      <div class="bg-white dark:bg-surface-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-surface-200 dark:border-surface-800">
-        <div class="px-6 py-4 border-b border-surface-200 dark:border-surface-800 flex justify-between items-center">
-          <h3 class="text-lg font-bold text-surface-900 dark:text-white">{{ isEdit ? 'Edit Pengumuman' : 'Tambah Pengumuman' }}</h3>
-          <button @click="closeModal" class="text-surface-400 hover:text-surface-600 dark:hover:text-surface-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
+    <AppModal 
+      v-model="showModal" 
+      :title="isEdit ? 'Sunting Pengumuman' : 'Terbitkan Pengumuman Baru'"
+      size="md"
+    >
+      <form @submit.prevent="submitForm" class="space-y-5 py-2">
+        <div class="form-group">
+          <label class="form-label">Judul Pengumuman</label>
+          <input 
+            type="text" 
+            v-model="formData.judul" 
+            class="form-input" 
+            placeholder="Contoh: Jadwal Libur Lebaran 2024"
+            required 
+          />
         </div>
         
-        <form @submit.prevent="submitForm" class="p-6 space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Judul Pengumuman</label>
-            <input type="text" v-model="formData.judul" class="input" required />
+        <div class="form-group">
+          <label class="form-label">Isi Pengumuman</label>
+          <textarea 
+            v-model="formData.konten" 
+            class="form-input min-h-[150px] resize-none" 
+            placeholder="Tuliskan detail pengumuman di sini..."
+            required
+          ></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="form-group">
+            <label class="form-label">Tanggal Mulai</label>
+            <input type="date" v-model="formData.tanggalMulai" class="form-input" required />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Konten</label>
-            <textarea v-model="formData.konten" class="input" rows="4" required></textarea>
+          <div class="form-group">
+            <label class="form-label">Tanggal Selesai (Opsional)</label>
+            <input type="date" v-model="formData.tanggalSelesai" class="form-input" />
+            <p class="text-[10px] text-surface-400 mt-1 italic">* Kosongkan jika berlaku selamanya</p>
           </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Tanggal Mulai</label>
-              <input type="date" v-model="formData.tanggalMulai" class="input" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Tanggal Selesai (Opsional)</label>
-              <input type="date" v-model="formData.tanggalSelesai" class="input" />
-            </div>
-          </div>
-          
-          <div class="pt-4 flex justify-end gap-3">
-            <button type="button" @click="closeModal" class="btn btn-outline">Batal</button>
-            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Menyimpan...' : 'Simpan' }}
-            </button>
-          </div>
-        </form>
+        </div>
+      </form>
+
+      <template #footer>
+        <button @click="closeModal" class="btn btn-ghost" :disabled="isSubmitting">Batal</button>
+        <button @click="submitForm" class="btn btn-primary min-w-[120px]" :disabled="isSubmitting">
+          <svg v-if="isSubmitting" class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          {{ isEdit ? 'Simpan Perubahan' : 'Terbitkan Sekarang' }}
+        </button>
+      </template>
+    </AppModal>
+
+    <!-- Delete Confirmation -->
+    <AppModal v-model="showDeleteConfirm" title="Hapus Pengumuman" size="sm">
+      <div class="py-4">
+        <div class="w-16 h-16 rounded-full bg-danger-50 dark:bg-danger-500/10 flex items-center justify-center mx-auto mb-4 text-danger-600">
+          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        </div>
+        <p class="text-center text-surface-600 dark:text-surface-300">
+          Apakah Anda yakin ingin menghapus pengumuman ini? Tindakan ini tidak dapat dibatalkan.
+        </p>
       </div>
-    </div>
+      <template #footer>
+        <button @click="showDeleteConfirm = false" class="btn btn-ghost">Batal</button>
+        <button @click="handleDelete" class="btn btn-danger min-w-[100px]">Ya, Hapus</button>
+      </template>
+    </AppModal>
   </div>
 </template>

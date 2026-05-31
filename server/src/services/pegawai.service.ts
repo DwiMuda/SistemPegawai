@@ -179,7 +179,16 @@ export class PegawaiService {
       }
     }
 
-    const updated = await PegawaiRepository.update(id, data);
+    // Clean and transform data for Prisma update
+    const { idJabatan, idDepartemen, buatAkun, ...cleanData } = data as any;
+    
+    const prismaUpdateData: any = {
+      ...cleanData,
+      ...(idJabatan && { jabatan: { connect: { idJabatan } } }),
+      ...(idDepartemen && { departemen: { connect: { idDepartemen } } }),
+    };
+
+    const updated = await PegawaiRepository.update(id, prismaUpdateData);
     return updated;
   }
 
